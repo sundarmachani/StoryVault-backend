@@ -19,7 +19,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;
 
-@SpringBootTest
+//@SpringBootTest
 public class DiaryControllerUnitTest {
 
   @InjectMocks
