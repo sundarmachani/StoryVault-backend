@@ -40,4 +40,5 @@ secrets.yml
 .gradletasknamecache
 .sts4-cache
 .git-hooks/
+.env
 node_modules
