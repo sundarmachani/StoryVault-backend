@@ -1,5 +1,6 @@
 package com.daily.my_dairy.security;
 
+import com.daily.my_dairy.Repository.UserRepository;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
@@ -14,11 +15,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -27,9 +24,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPublicKey;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Configuration
 public class JwtAuthSecurityConfiguration {
@@ -38,8 +33,7 @@ public class JwtAuthSecurityConfiguration {
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
         .csrf(csrf -> csrf.disable())
-        .sessionManagement(
-            session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/authenticate", "/register").permitAll()
             .anyRequest().authenticated()
@@ -52,8 +46,7 @@ public class JwtAuthSecurityConfiguration {
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedOrigins(
-        List.of("http://localhost:5173", "https://storyvault.vercel.app"));
+    configuration.setAllowedOrigins(List.of("http://localhost:5173", "https://storyvault.vercel.app"));
     configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
     configuration.setAllowedHeaders(List.of("*"));
     configuration.setAllowCredentials(true);
@@ -64,8 +57,8 @@ public class JwtAuthSecurityConfiguration {
   }
 
   @Bean
-  public UserDetailsService userDetailsService() {
-    return new InMemoryUserDetailsManager(); // Can be replaced with DB-based user store
+  public UserDetailsService userDetailsService(UserRepository userRepository) {
+    return new CustomUserDetailsService(userRepository);
   }
 
   @Bean
