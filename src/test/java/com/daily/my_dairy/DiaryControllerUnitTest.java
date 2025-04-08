@@ -16,10 +16,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;
 
-//@SpringBootTest
 public class DiaryControllerUnitTest {
 
   @InjectMocks
@@ -35,9 +33,9 @@ public class DiaryControllerUnitTest {
 
   @Test
   void createNewEntry_ShouldReturnCreatedResponse_WhenValidDiaryProvided() {
-    Diary inputDiary = new Diary(0, "Monday", "Monday's story", "2025-01-27");
+    Diary inputDiary = new Diary(0, "Monday", "Monday's story", "2025-01-27", null);
     DiaryVM expectedDiaryVM = new DiaryVM(1, "Monday", "Monday's story", "2025-01-27");
-    when(diaryService.newDairyEntry(inputDiary)).thenReturn(expectedDiaryVM);
+    when(diaryService.newDiaryEntry(inputDiary)).thenReturn(expectedDiaryVM);
     ResponseEntity<DiaryVM> response = diaryController.createNewEntry(inputDiary);
     assertEquals(CREATED, response.getStatusCode());
     assertEquals("/get-entry/1", response.getHeaders().getLocation().toString());
@@ -46,7 +44,7 @@ public class DiaryControllerUnitTest {
 
   @Test
   void getEntryById_ShouldReturnCreatedResponse_WhenValidIdProvided() {
-    Diary inputDiary = new Diary(1, "Monday", "Monday's story", "2025-01-27");
+    Diary inputDiary = new Diary(1, "Monday", "Monday's story", "2025-01-27", null);
     DiaryVM expectedDiaryVM = new DiaryVM(1, "Monday", "Monday's story", "2025-01-27");
     when(diaryService.getById(inputDiary.getId())).thenReturn(expectedDiaryVM);
     DiaryVM response = diaryController.getEntryById(inputDiary.getId());
@@ -57,13 +55,10 @@ public class DiaryControllerUnitTest {
   @Test
   void getAll_ShouldReturnDiaryList() {
     List<DiaryVM> diaryList = new ArrayList<>();
-    DiaryVM diary1 = new DiaryVM(1, "Monday", "Monday's story", "2025-01-27");
-    DiaryVM diary2 = new DiaryVM(2, "Tuesday", "Tuesday's story", "2025-01-28");
-    DiaryVM diary3 = new DiaryVM(3, "Wednesday", "Wednesday's story", "2025-01-29");
-    diaryList.add(diary1);
-    diaryList.add(diary2);
-    diaryList.add(diary3);
-    when(diaryService.getAll()).thenReturn(diaryList);
+    diaryList.add(new DiaryVM(1, "Monday", "Monday's story", "2025-01-27"));
+    diaryList.add(new DiaryVM(2, "Tuesday", "Tuesday's story", "2025-01-28"));
+    diaryList.add(new DiaryVM(3, "Wednesday", "Wednesday's story", "2025-01-29"));
+    when(diaryService.getAllByCurrentUser()).thenReturn(diaryList);
     List<DiaryVM> diaryVMList = diaryController.getAllEntries();
     assertEquals(3, diaryVMList.size());
     assertEquals(1, diaryVMList.get(0).getId());
@@ -71,7 +66,7 @@ public class DiaryControllerUnitTest {
 
   @Test
   void updateEntry_ShouldReturnCreatedResponse_WhenValidIdProvided() {
-    Diary inputDiary = new Diary(1, "Monday", "Monday's story", "2025-01-27");
+    Diary inputDiary = new Diary(1, "Monday", "Monday's story", "2025-01-27", null);
     DiaryVM expectedDiaryVM = new DiaryVM(1, "Monday", "Monday's story", "2025-01-27");
     when(diaryService.updateEntry(inputDiary)).thenReturn(expectedDiaryVM);
     DiaryVM response = diaryController.updateEntry(inputDiary);
@@ -81,23 +76,22 @@ public class DiaryControllerUnitTest {
 
   @Test
   void deleteEntry_ShouldReturnCreatedResponse_WhenValidIdProvided() {
-    Diary inputDiary = new Diary(1, "Monday", "Monday's story", "2025-01-27");
+    Diary inputDiary = new Diary(1, "Monday", "Monday's story", "2025-01-27", null);
     ResponseEntity<Object> response = diaryController.deleteEntryById(inputDiary.getId());
     assertEquals("Success", response.getBody());
   }
 
   @Test
   void updateEntry_ShouldThrowException_WhenInvalidDateProvided() {
-    Diary invalidDiary = new Diary(1, "Monday", "Invalid update", "invalid-date");
+    Diary invalidDiary = new Diary(1, "Monday", "Invalid update", "invalid-date", null);
     when(diaryService.updateEntry(invalidDiary)).thenThrow(new RuntimeException("Invalid date"));
     assertThrows(RuntimeException.class, () -> diaryController.updateEntry(invalidDiary));
   }
 
   @Test
   void getAll_ShouldReturnEmptyList_WhenNoEntriesExist() {
-    when(diaryService.getAll()).thenReturn(new ArrayList<>());
+    when(diaryService.getAllByCurrentUser()).thenReturn(new ArrayList<>());
     List<DiaryVM> diaryVMList = diaryController.getAllEntries();
     assertEquals(0, diaryVMList.size());
   }
-
 }
