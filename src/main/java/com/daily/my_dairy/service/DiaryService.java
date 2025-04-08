@@ -65,14 +65,25 @@ public class DiaryService {
   }
 
   public DiaryVM updateEntry(Diary diary) {
-    diaryRepository.findById(diary.getId()).orElseThrow(() ->
-        new ResourceNotFoundException("Entry with id " + diary.getId() + " not found!"));
+    Diary existingDiary = diaryRepository.findById(diary.getId())
+        .orElseThrow(
+            () -> new ResourceNotFoundException("Entry with id " + diary.getId() + " not found!"));
+
+    String username = SecurityContextHolder.getContext().getAuthentication().getName();
+    User user = userRepository.findByUsername(username);
+    if (user == null) {
+      throw new RuntimeException("User not found");
+    }
+
     LocalDate date = LocalDate.parse(diary.getEntryDate());
     String dayOfWeek = date.format(DateTimeFormatter.ofPattern("EEEE"));
     diary.setDay(dayOfWeek);
-    Diary diaryDb = diaryRepository.save(diary);
-    return new DiaryVM(diaryDb.getId(), diaryDb.getDay(), diaryDb.getDescription(),
-        diaryDb.getEntryDate());
+
+    diary.setUser(user);
+
+    Diary updatedDiary = diaryRepository.save(diary);
+    return new DiaryVM(updatedDiary.getId(), updatedDiary.getDay(),
+        updatedDiary.getDescription(), updatedDiary.getEntryDate());
   }
 
   public void deleteEntryById(int id) {
