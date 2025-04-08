@@ -1,4 +1,4 @@
-package com.daily.my_dairy.controller;
+package com.daily.my_dairy.security;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
