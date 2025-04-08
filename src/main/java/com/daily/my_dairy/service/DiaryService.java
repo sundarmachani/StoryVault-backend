@@ -1,64 +1,83 @@
 package com.daily.my_dairy.service;
 
 import com.daily.my_dairy.Repository.DiaryRepository;
+import com.daily.my_dairy.Repository.UserRepository;
 import com.daily.my_dairy.custom.ResourceNotFoundException;
 import com.daily.my_dairy.model.Diary;
 import com.daily.my_dairy.model.DiaryVM;
+import com.daily.my_dairy.model.User;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import org.springframework.stereotype.Service;
+import java.util.stream.Collectors;
 
 @Service
 public class DiaryService {
 
-  DiaryRepository dairyRepository;
+  private final DiaryRepository diaryRepository;
+  private final UserRepository userRepository;
 
-  public DiaryService(DiaryRepository dairyRepository) {
-    this.dairyRepository = dairyRepository;
+  public DiaryService(DiaryRepository diaryRepository, UserRepository userRepository) {
+    this.diaryRepository = diaryRepository;
+    this.userRepository = userRepository;
   }
 
-  public DiaryVM newDairyEntry(Diary dairy) {
-    LocalDate date = LocalDate.parse(dairy.getEntryDate());
+  public DiaryVM newDiaryEntry(Diary diary) {
+    String username = SecurityContextHolder.getContext().getAuthentication().getName();
+    User user = userRepository.findByUsername(username);
+    if (user == null) {
+      throw new ResourceNotFoundException("User not found");
+    }
+
+    LocalDate date = LocalDate.parse(diary.getEntryDate());
     String dayOfWeek = date.format(DateTimeFormatter.ofPattern("EEEE"));
-    dairy.setDay(dayOfWeek);
-    Diary dairyDb = dairyRepository.save(dairy);
-    return new DiaryVM(dairyDb.getId(), dairyDb.getDay(), dairyDb.getDescription(),
-        dairyDb.getEntryDate());
+    diary.setDay(dayOfWeek);
+    diary.setUser(user);
+    Diary diaryDb = diaryRepository.save(diary);
+
+    return new DiaryVM(diaryDb.getId(), diaryDb.getDay(), diaryDb.getDescription(),
+        diaryDb.getEntryDate());
   }
 
   public DiaryVM getById(int id) {
-    Diary dairyDb = dairyRepository.findById(id).orElseThrow(() ->
+    Diary diaryDb = diaryRepository.findById(id).orElseThrow(() ->
         new ResourceNotFoundException("Entry with id " + id + " not found!"));
-    return new DiaryVM(dairyDb.getId(), dairyDb.getDay(), dairyDb.getDescription(),
-        dairyDb.getEntryDate());
+    return new DiaryVM(diaryDb.getId(), diaryDb.getDay(), diaryDb.getDescription(),
+        diaryDb.getEntryDate());
   }
 
-  public List<DiaryVM> getAll() {
-    List<Diary> diaryList= dairyRepository.findAll();
-    List<DiaryVM> diaryListVM = new ArrayList<>(diaryList.stream()
+  public List<DiaryVM> getAllByCurrentUser() {
+    String username = SecurityContextHolder.getContext().getAuthentication().getName();
+    User user = userRepository.findByUsername(username);
+    if (user == null) {
+      throw new RuntimeException("User not found");
+    }
+
+    List<Diary> diaryList = diaryRepository.findByUser(user);
+    return diaryList.stream()
         .map(d -> new DiaryVM(d.getId(), d.getDay(), d.getDescription(), d.getEntryDate()))
-        .toList());
-    diaryListVM.sort(Comparator.comparingInt(DiaryVM::getId).reversed());
-    return diaryListVM;
+        .sorted(Comparator.comparingInt(DiaryVM::getId).reversed())
+        .toList();
   }
 
-  public DiaryVM updateEntry(Diary dairy) {
-    dairyRepository.findById(dairy.getId()).orElseThrow(() ->
-        new ResourceNotFoundException("Entry with id " + dairy.getId() + " not found!"));
-    LocalDate date = LocalDate.parse(dairy.getEntryDate());
+  public DiaryVM updateEntry(Diary diary) {
+    diaryRepository.findById(diary.getId()).orElseThrow(() ->
+        new ResourceNotFoundException("Entry with id " + diary.getId() + " not found!"));
+    LocalDate date = LocalDate.parse(diary.getEntryDate());
     String dayOfWeek = date.format(DateTimeFormatter.ofPattern("EEEE"));
-    dairy.setDay(dayOfWeek);
-    Diary dairyDb = dairyRepository.save(dairy);
-    return new DiaryVM(dairyDb.getId(), dairyDb.getDay(), dairyDb.getDescription(),
-        dairyDb.getEntryDate());
+    diary.setDay(dayOfWeek);
+    Diary diaryDb = diaryRepository.save(diary);
+    return new DiaryVM(diaryDb.getId(), diaryDb.getDay(), diaryDb.getDescription(),
+        diaryDb.getEntryDate());
   }
 
   public void deleteEntryById(int id) {
-    dairyRepository.findById(id).orElseThrow(() ->
+    diaryRepository.findById(id).orElseThrow(() ->
         new ResourceNotFoundException("Entry with id " + id + " not found!"));
-    dairyRepository.deleteById(id);
+    diaryRepository.deleteById(id);
   }
 }
