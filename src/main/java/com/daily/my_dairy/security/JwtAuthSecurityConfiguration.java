@@ -36,22 +36,23 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class JwtAuthSecurityConfiguration {
 
   /**
-   * Configures the Spring Security filter chain.
-   * - Disables CSRF for stateless APIs.
-   * - Permits unauthenticated access to the `/authenticate` endpoint.
-   * - Requires authentication for all other endpoints.
-   * - Configures JWT-based authentication for OAuth2 resource server.
+   * Configures the Spring Security filter chain. - Disables CSRF for stateless APIs. - Permits
+   * unauthenticated access to the `/authenticate` endpoint. - Requires authentication for all other
+   * endpoints. - Configures JWT-based authentication for OAuth2 resource server.
    */
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
         .csrf(csrf -> csrf.disable()) // Disable CSRF for stateless APIs
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/authenticate", "/register").permitAll() // Allow unauthenticated access to /authenticate
+            .requestMatchers("/authenticate", "/register")
+            .permitAll() // Allow unauthenticated access to /authenticate
             .anyRequest().authenticated() // All other requests require authentication
         )
-        .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults())) // Enable JWT authentication
-        .cors(cors -> cors.configurationSource(corsConfigurationSource())); // Apply custom CORS configuration
+        .oauth2ResourceServer(
+            oauth2 -> oauth2.jwt(Customizer.withDefaults())) // Enable JWT authentication
+        .cors(cors -> cors.configurationSource(
+            corsConfigurationSource())); // Apply custom CORS configuration
 
     return http.build();
   }
@@ -59,8 +60,10 @@ public class JwtAuthSecurityConfiguration {
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedOrigins(List.of("http://localhost:5173")); // Allowed origins
-    configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Allowed methods
+    configuration.setAllowedOrigins(
+        List.of("http://localhost:5173", "https://storyvault.vercel.app")); // Allowed origins
+    configuration.setAllowedMethods(
+        Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Allowed methods
     configuration.setAllowedHeaders(List.of("*")); // Allow all headers
     configuration.setAllowCredentials(true); // Allow credentials (if needed)
 
@@ -70,8 +73,8 @@ public class JwtAuthSecurityConfiguration {
   }
 
   /**
-   * Configures an in-memory user store with two users: "sundar" and "admin".
-   * - Passwords are encoded using BCryptPasswordEncoder.
+   * Configures an in-memory user store with two users: "sundar" and "admin". - Passwords are
+   * encoded using BCryptPasswordEncoder.
    */
   @Bean
   public UserDetailsService userDetailsService() {
