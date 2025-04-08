@@ -18,7 +18,8 @@ public class JwtAuthSecurityController {
   private final JwtEncoder jwtEncoder;
   private final AuthenticationManager authenticationManager;
 
-  public JwtAuthSecurityController(JwtEncoder jwtEncoder, AuthenticationManager authenticationManager) {
+  public JwtAuthSecurityController(JwtEncoder jwtEncoder,
+      AuthenticationManager authenticationManager) {
     this.jwtEncoder = jwtEncoder;
     this.authenticationManager = authenticationManager;
   }
@@ -51,5 +52,10 @@ public class JwtAuthSecurityController {
 }
 
 // request/response records
-record AuthRequest(String username, String password) {}
-record JwtResponse(String token) {}
+record AuthRequest(String username, String password) {
+
+}
+
+record JwtResponse(String token) {
+
+}
